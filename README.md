@@ -5,18 +5,18 @@
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 
-Swift Package tích hợp In-App Purchases (StoreKit 2) cho các app iOS.
+A lightweight Swift Package for adding In-App Purchases (StoreKit 2) to iOS apps.
 
-- Tải sản phẩm, mua, khôi phục (restore), theo dõi quyền sở hữu (entitlements)
-- Tự lắng nghe `Transaction.updates` (gia hạn, Ask to Buy, hoàn tiền…)
-- Xác thực giao dịch (JWS) qua StoreKit 2
-- `isPremium` sẵn dùng cho paywall
-- Helper SwiftUI: `PurchaseButton`, `RestorePurchasesButton`
-- Hỗ trợ: iOS 15+, macOS 12+, tvOS 15+, watchOS 8+
+- Load products, purchase, restore, and track entitlements
+- Automatically listens to `Transaction.updates` (renewals, Ask to Buy, refunds…)
+- Transaction verification (JWS) via StoreKit 2
+- Ready-to-use `isPremium` flag for paywalls
+- SwiftUI helpers: `PurchaseButton`, `RestorePurchasesButton`
+- Supports iOS 15+, macOS 12+, tvOS 15+, watchOS 8+
 
-## Cài đặt
+## Installation
 
-**Xcode:** File ▸ Add Package Dependencies… ▸ dán URL `https://github.com/nangnguyendev/IAP.git` ▸ Dependency Rule: *Up to Next Major Version* `1.0.0` ▸ chọn product `IAP`.
+**Xcode:** File ▸ Add Package Dependencies… ▸ paste `https://github.com/nangnguyendev/IAP.git` ▸ Dependency Rule: *Up to Next Major Version* `1.0.0` ▸ add the `IAP` product.
 
 **Package.swift:**
 
@@ -29,9 +29,9 @@ targets: [
 ]
 ```
 
-## Sử dụng
+## Usage
 
-### 1. Khởi tạo khi app chạy
+### 1. Start at launch
 
 ```swift
 import SwiftUI
@@ -53,7 +53,7 @@ struct MyApp: App {
 }
 ```
 
-### 2. Kiểm tra quyền premium
+### 2. Check premium access
 
 ```swift
 struct ContentView: View {
@@ -83,23 +83,23 @@ struct PaywallView: View {
                     if outcome.isSuccess { dismiss() }
                 }
                 if let perMonth = product.monthlyPriceText, product.periodText != nil {
-                    Text("\(perMonth) / tháng").font(.caption)
+                    Text("\(perMonth) / month").font(.caption)
                 }
             }
-            RestorePurchasesButton("Khôi phục giao dịch")
+            RestorePurchasesButton()
         }
         .overlay { if iap.isLoadingProducts { ProgressView() } }
     }
 }
 ```
 
-### 4. Mua bằng code (UIKit hoặc logic riêng)
+### 4. Purchase from code (UIKit or custom logic)
 
 ```swift
 do {
     switch try await iap.purchase(productID: "com.myapp.lifetime") {
-    case .success(let transaction): print("Đã mua", transaction.productID)
-    case .pending:                  print("Đang chờ duyệt (Ask to Buy)")
+    case .success(let transaction): print("Purchased", transaction.productID)
+    case .pending:                  print("Waiting for approval (Ask to Buy)")
     case .cancelled:                break
     }
 } catch {
@@ -107,9 +107,9 @@ do {
 }
 ```
 
-### 5. Consumables / đồng bộ backend
+### 5. Consumables / backend sync
 
-Mặc định giao dịch được `finish()` tự động. Để cộng xu (consumable) hoặc gửi lên server trước khi finish:
+Transactions are finished automatically by default. To deliver consumables (e.g. coins) or notify your server before a transaction is finished:
 
 ```swift
 iap.transactionHandler = { transaction in
@@ -119,69 +119,71 @@ iap.transactionHandler = { transaction in
 }
 ```
 
-Nếu cần tự finish (ví dụ chờ server xác nhận), tạo cấu hình với `autoFinishTransactions: false` và gọi `await transaction.finish()` trong `transactionHandler` khi đã giao hàng xong.
+The handler runs on the main actor. If you need to finish transactions yourself (e.g. after your server confirms delivery), set `autoFinishTransactions: false` in the configuration and call `await transaction.finish()` inside `transactionHandler` once the content has been delivered.
 
-### 6. Chỉ định sản phẩm nào là "premium"
+### 6. Choose which products count as "premium"
 
 ```swift
 IAPConfiguration(
     productIDs: ["pro.monthly", "pro.yearly", "remove_ads"],
-    premiumProductIDs: ["pro.monthly", "pro.yearly"]   // remove_ads không tính là premium
+    premiumProductIDs: ["pro.monthly", "pro.yearly"]
 )
 ```
 
-## API chính
+Here owning `remove_ads` does not make `isPremium` true. When `premiumProductIDs` is `nil`, any non-consumable or active subscription counts as premium.
 
-| Thành phần | Mô tả |
+## API overview
+
+| Member | Description |
 |---|---|
-| `start()` | Bắt đầu lắng nghe giao dịch, tải sản phẩm và entitlements |
-| `products`, `subscriptions`, `nonConsumables`, `consumables` | Danh sách sản phẩm (sắp xếp theo giá) |
-| `purchase(_:)` / `purchase(productID:)` | Mua, trả về `PurchaseOutcome` |
-| `restorePurchases()` | Gọi `AppStore.sync()` — chỉ dùng cho nút Restore |
-| `isPremium`, `isPurchased(_:)`, `purchasedProductIDs` | Trạng thái sở hữu |
-| `expirationDate(for:)` | Ngày hết hạn subscription |
-| `showManageSubscriptions(in:)` | (iOS) Mở sheet quản lý subscription |
-| `Product.periodText`, `.monthlyPriceText`, `.isEligibleForIntroOffer` | Helper hiển thị |
+| `start()` | Starts listening for transactions, processes unfinished ones, loads products and entitlements |
+| `products`, `subscriptions`, `nonConsumables`, `consumables` | Available products, sorted by price |
+| `purchase(_:)` / `purchase(productID:)` | Buys a product and returns a `PurchaseOutcome` |
+| `restorePurchases()` | Calls `AppStore.sync()` — use only from a Restore button |
+| `isPremium`, `isPurchased(_:)`, `purchasedProductIDs` | Ownership state |
+| `expirationDate(for:)` | Subscription expiration date |
+| `showManageSubscriptions(in:)` | (iOS) Presents the Manage Subscriptions sheet |
+| `Product.periodText`, `.monthlyPriceText`, `.isEligibleForIntroOffer` | Display helpers |
 
-## App mẫu
+## Example app
 
-`Examples/IAPExample` là app SwiftUI (iOS 16+) dùng package này qua đường dẫn local, kèm `Products.storekit` để test mà không cần App Store Connect:
+`Examples/IAPExample` is a SwiftUI app (iOS 16+) that uses this package via a local path and ships with a `Products.storekit` file, so you can test without App Store Connect:
 
-| Product ID | Loại | Giá |
+| Product ID | Type | Price |
 |---|---|---|
-| `com.nguyennn.iapexample.pro.monthly` | Auto-renewable | $4.99 / tháng |
-| `com.nguyennn.iapexample.pro.yearly` | Auto-renewable (trial 1 tuần) | $29.99 / năm |
+| `com.nguyennn.iapexample.pro.monthly` | Auto-renewable | $4.99 / month |
+| `com.nguyennn.iapexample.pro.yearly` | Auto-renewable (1-week free trial) | $29.99 / year |
 | `com.nguyennn.iapexample.lifetime` | Non-consumable | $29.99 |
 | `com.nguyennn.iapexample.removeads` | Non-consumable | $1.99 |
 | `com.nguyennn.iapexample.coins100` / `coins500` | Consumable | $0.99 / $3.99 |
 
-Chạy thử:
+To run it:
 
-1. Mở `Examples/IAPExample/IAPExample.xcodeproj`.
-2. Chọn scheme **IAPExample** và một simulator, rồi bấm Run. Scheme đã gán sẵn `Products.storekit`. Nếu danh sách sản phẩm trống, vào *Edit Scheme ▸ Run ▸ Options ▸ StoreKit Configuration* và chọn lại `Products.storekit`.
-3. Thử các luồng: mua subscription/lifetime (trạng thái Premium chuyển sang Yes), mua xu (số xu tăng qua `transactionHandler`), Restore, Manage subscriptions, mở paywall.
-4. Vào *Debug ▸ StoreKit ▸ Manage Transactions* để hoàn tiền, cho gia hạn nhanh, hoặc bật *Ask to Buy* để test trạng thái pending.
+1. Open `Examples/IAPExample/IAPExample.xcodeproj`.
+2. Select the **IAPExample** scheme and a simulator, then press Run. The scheme already uses `Products.storekit`. If the product list is empty, go to *Edit Scheme ▸ Run ▸ Options ▸ StoreKit Configuration* and select `Products.storekit` again.
+3. Try the flows: buy a subscription or lifetime (Premium switches to Yes), buy coins (balance increases via `transactionHandler`), Restore, Manage subscriptions, and the paywall.
+4. Use *Debug ▸ StoreKit ▸ Manage Transactions* to refund, speed up renewals, or enable *Ask to Buy* to test the pending state.
 
-## Test trong app của bạn
+## Testing in your own app
 
-1. Xcode ▸ File ▸ New ▸ File… ▸ **StoreKit Configuration File**, thêm các product ID giống trên App Store Connect.
-2. Edit Scheme ▸ Run ▸ Options ▸ **StoreKit Configuration** ▸ chọn file vừa tạo.
-3. Chạy app trên simulator — mua/hoàn tiền/gia hạn được giả lập qua *Debug ▸ StoreKit ▸ Manage Transactions*.
+1. Xcode ▸ File ▸ New ▸ File… ▸ **StoreKit Configuration File**, and add the same product IDs as in App Store Connect.
+2. Edit Scheme ▸ Run ▸ Options ▸ **StoreKit Configuration** ▸ select the new file.
+3. Run on a simulator — purchases, refunds and renewals can be simulated via *Debug ▸ StoreKit ▸ Manage Transactions*.
 
-## Phát hành phiên bản
+## Releasing a new version
 
-Package dùng [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`.
+This package follows [Semantic Versioning](https://semver.org): `MAJOR.MINOR.PATCH`.
 
-1. Ghi thay đổi vào `CHANGELOG.md`.
-2. Commit, gắn tag rồi push:
+1. Record the changes in `CHANGELOG.md`.
+2. Commit, tag, and push:
 
 ```bash
 git tag 1.1.0
 git push origin main --tags
 ```
 
-Các app đang dùng *Up to Next Major Version* sẽ nhận bản mới qua File ▸ Packages ▸ Update to Latest Package Versions.
+Apps using *Up to Next Major Version* pick up the new release via File ▸ Packages ▸ Update to Latest Package Versions.
 
 ## License
 
-Phát hành theo giấy phép MIT. Xem [LICENSE](LICENSE).
+Released under the MIT License. See [LICENSE](LICENSE).
