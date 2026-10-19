@@ -3,12 +3,12 @@
 ## [1.0.0] - 2026-10-19
 
 ### Added
-- `IAPManager` dựa trên StoreKit 2: tải sản phẩm, mua, restore, theo dõi entitlements.
-- Tự lắng nghe `Transaction.updates` và xử lý `Transaction.unfinished` khi khởi động.
-- `IAPConfiguration` với `premiumProductIDs` và `autoFinishTransactions`.
-- `transactionHandler` để giao consumable hoặc đồng bộ backend.
-- Helper `Product`: `periodText`, `monthlyPriceText`, `isEligibleForIntroOffer`.
+- `IAPManager` built on StoreKit 2: load products, purchase, restore, and track entitlements.
+- Automatically listens to `Transaction.updates` and processes `Transaction.unfinished` at launch.
+- `IAPConfiguration` with `premiumProductIDs` and `autoFinishTransactions`.
+- `transactionHandler` for delivering consumables or syncing with a backend.
+- `Product` helpers: `periodText`, `monthlyPriceText`, `isEligibleForIntroOffer`.
 - SwiftUI: `PurchaseButton`, `RestorePurchasesButton`.
-- App mẫu `Examples/IAPExample` kèm `Products.storekit`.
+- Example app `Examples/IAPExample` with `Products.storekit`.
 
 [1.0.0]: https://github.com/nangnguyendev/IAP/releases/tag/1.0.0
