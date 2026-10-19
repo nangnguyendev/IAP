@@ -3,6 +3,7 @@
 ![Swift](https://img.shields.io/badge/Swift-5.9+-orange.svg)
 ![Platforms](https://img.shields.io/badge/platforms-iOS%2015%20%7C%20macOS%2012%20%7C%20tvOS%2015%20%7C%20watchOS%208-blue.svg)
 ![SPM](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)
+![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 
 Swift Package tích hợp In-App Purchases (StoreKit 2) cho các app iOS.
 
@@ -180,3 +181,7 @@ git push origin main --tags
 ```
 
 Các app đang dùng *Up to Next Major Version* sẽ nhận bản mới qua File ▸ Packages ▸ Update to Latest Package Versions.
+
+## License
+
+Phát hành theo giấy phép MIT. Xem [LICENSE](LICENSE).
