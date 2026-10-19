@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1] - 2026-10-19
+
+### Added
+- MIT license.
+
+### Changed
+- README and CHANGELOG translated to English.
+
 ## [1.0.0] - 2026-10-19
 
 ### Added
@@ -11,4 +19,5 @@
 - SwiftUI: `PurchaseButton`, `RestorePurchasesButton`.
 - Example app `Examples/IAPExample` with `Products.storekit`.
 
+[1.0.1]: https://github.com/nangnguyendev/IAP/releases/tag/1.0.1
 [1.0.0]: https://github.com/nangnguyendev/IAP/releases/tag/1.0.0
